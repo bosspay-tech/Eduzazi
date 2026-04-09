@@ -52,7 +52,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 rounded-xl px-2 py-1 text-lg font-bold text-violet-600 hover:bg-gray-100"
           >
-            <img src="/logo.png" alt="logo" className="h-20 w-20" />EDUCAZIONE STUDY ABROD PRIVATE LIMITED
+            <img src="/logo.png" alt="logo" className="h-20 w-20" />EDUCAZIONE STUDY ABROAD PRIVATE LIMITED
           </Link>
         </div>
 

@@ -31,7 +31,7 @@ export default function Contact() {
                   ADDRESS
                 </div>
                 <p className="mt-1 leading-6">
-                  Bhagheeratha Square
+                  Bhageeratha Square
                   <br />
                   First floor , No C 021 67/1717 (old no 41/3197)
                   <br /> Banerji Road,Kacheripady <br /> Cochin-682018

@@ -29,7 +29,7 @@ export default function Footer() {
               </div>
 
               <div className="mt-2 text-xs text-slate-300 leading-5">
-                Bhagheeratha Square
+                Bhageeratha Square
                 <br />
                 First floor , No C 021 67/1717 (old no 41/3197)
                 <br />
