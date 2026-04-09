@@ -42,10 +42,6 @@ export default function Footer() {
                 📞 +91 8129870556
               </div>
 
-              <div className="mt-2 text-xs text-slate-300">
-                GST: 33DJZPG1620K1Z0
-              </div>
-
               <div className="mt-1 text-xs text-slate-300">
                 GST REG: 32AAJCE2888C1ZQ
               </div>
