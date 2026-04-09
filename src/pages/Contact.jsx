@@ -51,14 +51,6 @@ export default function Contact() {
               </div>
               <div>
                 <div className="text-xs font-semibold tracking-widest text-slate-400">
-                  GST
-                </div>
-                <a className="mt-1 inline-flex items-center gap-2 font-semibold text-white hover:text-cyan-300">
-                  33DJZPG1620K1Z0
-                </a>
-              </div>
-              <div>
-                <div className="text-xs font-semibold tracking-widest text-slate-400">
                   GST REG
                 </div>
                 <a className="mt-1 inline-flex items-center gap-2 font-semibold text-white hover:text-cyan-300">
