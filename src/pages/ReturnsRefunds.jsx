@@ -1,4 +1,4 @@
-// ReturnsRefunds.jsx (updated)
+// ReturnsRefunds.jsx (Digital Courses - No Refund Policy)
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -12,138 +12,93 @@ export default function ReturnsRefunds() {
               Home
             </Link>{" "}
             <span className="text-slate-600">/</span>{" "}
-            <span className="font-semibold text-white">Returns & Refunds</span>
+            <span className="font-semibold text-white">
+              Refund & Cancellation Policy
+            </span>
           </div>
 
           <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Returns & Refund Policy
+            Refund & Cancellation Policy
           </h1>
         </div>
 
         <div className="mt-6 space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm backdrop-blur">
-          {/* Return Window */}
+          {/* Digital Product Nature */}
           <section>
-            <h2 className="text-sm font-bold text-white">Return Window</h2>
+            <h2 className="text-sm font-bold text-white">Nature of Product</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Returns are accepted within{" "}
-              <span className="font-semibold text-slate-100">7 days</span> of
-              delivery. Requests raised after this window may not be accepted.
-            </p>
-          </section>
-
-          {/* Eligibility & Conditions */}
-          <section>
-            <h2 className="text-sm font-bold text-white">
-              Eligibility & Conditions
-            </h2>
-            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-300">
-              <li>
-                Returns are only accepted if you received an incorrect item or
-                an item not listed on your bill due to our error.
-              </li>
-              <li>
-                We recommend recording a short video while opening your parcel.
-                This helps in case of defective or incorrect items.
-              </li>
-              <li>
-                For branded items, returns are accepted only if original
-                packaging and all contents are intact.
-              </li>
-              <li>
-                A return authorization is mandatory before sending any product
-                back.
-              </li>
-              <li>
-                Products sent without authorization will be returned to the
-                sender.
-              </li>
-            </ul>
-          </section>
-
-          {/* Non Returnable */}
-          <section>
-            <h2 className="text-sm font-bold text-white">
-              Non-Returnable Items
-            </h2>
-            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-300">
-              <li>Personalized or customized products.</li>
-              <li>Products damaged due to misuse or mishandling.</li>
-            </ul>
-          </section>
-
-          {/* Return Process */}
-          <section>
-            <h2 className="text-sm font-bold text-white">Return Process</h2>
-            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-300">
-              <li>Once approved, we will provide a return shipping label.</li>
-              <li>
-                You must securely pack the product with all original contents.
-              </li>
-              <li>We recommend using original packaging if available.</li>
-              <li>
-                Record a video while packing your return for verification.
-              </li>
-              <li>Our team will also record an unboxing video upon receipt.</li>
-            </ul>
-          </section>
-
-          {/* How to Initiate */}
-          <section>
-            <h2 className="text-sm font-bold text-white">
-              How to Initiate a Return
-            </h2>
-            <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-300">
-              <li>
-                Contact support at{" "}
-                <span className="font-semibold text-cyan-300">
-                  support@educazi.com
-                </span>{" "}
-                with your order ID.
-              </li>
-              <li>
-                Share images/video if the product is damaged or incorrect.
-              </li>
-              <li>
-                We will arrange pickup (if serviceable) or provide return
-                instructions.
-              </li>
-            </ol>
-          </section>
-
-          {/* Exchange */}
-          <section>
-            <h2 className="text-sm font-bold text-white">Exchange</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Exchanges are available for the same product (subject to
-              availability). If unavailable, a refund or store credit will be
-              provided.
-            </p>
-          </section>
-
-          {/* Refunds */}
-          <section>
-            <h2 className="text-sm font-bold text-white">Refunds</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Refunds are processed within{" "}
+              All courses available on our platform are{" "}
               <span className="font-semibold text-slate-100">
-                5–10 business days
+                digital products
               </span>{" "}
-              after the item passes quality check. Shipping and packaging
-              charges are non-refundable. COD refunds are processed via bank
-              transfer/UPI after verification.
+              delivered in the form of downloadable PDFs or online access
+              materials. No physical products are shipped.
             </p>
           </section>
 
-          {/* Damaged */}
+          {/* Delivery */}
           <section>
             <h2 className="text-sm font-bold text-white">
-              Damaged / Wrong Item
+              Delivery of Course Material
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              If you receive a damaged or incorrect item, contact us within{" "}
-              <span className="font-semibold text-slate-100">48 hours</span>{" "}
-              with images or unboxing video. We will resolve it via replacement
-              or refund.
+              Upon successful payment, course materials will be delivered{" "}
+              <span className="font-semibold text-slate-100">instantly</span>{" "}
+              via:
+            </p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-slate-300 space-y-1">
+              <li>Download link on the platform</li>
+              <li>Email (if applicable)</li>
+            </ul>
+          </section>
+
+          {/* No Refund Policy */}
+          <section>
+            <h2 className="text-sm font-bold text-white">No Refund Policy</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Due to the nature of digital content,{" "}
+              <span className="font-semibold text-red-400">
+                all purchases are final and non-refundable
+              </span>
+              . Once the course material has been accessed or downloaded, we do
+              not offer refunds, cancellations, or exchanges under any
+              circumstances.
+            </p>
+          </section>
+
+          {/* Exceptions */}
+          <section>
+            <h2 className="text-sm font-bold text-white">Exceptions</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Refunds may only be considered in the following rare cases:
+            </p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-slate-300 space-y-1">
+              <li>Duplicate payment made for the same course</li>
+              <li>Payment completed but course access not provided</li>
+            </ul>
+          </section>
+
+          {/* User Responsibility */}
+          <section>
+            <h2 className="text-sm font-bold text-white">
+              User Responsibility
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Users are advised to carefully review course details, curriculum,
+              and requirements before making a purchase. By completing a
+              purchase, you agree to this policy.
+            </p>
+          </section>
+
+          {/* Support */}
+          <section>
+            <h2 className="text-sm font-bold text-white">
+              Support & Assistance
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              If you face any issues accessing your course materials, please
+              contact our support team. We will ensure that you receive proper
+              access to your purchased content.
             </p>
           </section>
 
@@ -151,7 +106,7 @@ export default function ReturnsRefunds() {
           <section>
             <h2 className="text-sm font-bold text-white">Contact</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              For any questions, reach us at{" "}
+              For any queries, reach us at{" "}
               <span className="font-semibold text-cyan-300">
                 support@educazi.com
               </span>

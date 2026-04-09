@@ -111,11 +111,6 @@ export default function Contact() {
               >
                 Send Message
               </button>
-
-              <p className="text-xs text-slate-400">
-                Note: This form is UI-only. Connect it to your backend/WhatsApp
-                for submissions.
-              </p>
             </form>
           </div>
         </div>

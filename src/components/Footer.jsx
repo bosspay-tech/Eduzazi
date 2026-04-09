@@ -100,15 +100,7 @@ export default function Footer() {
 
               <div>
                 <h4 className="text-sm font-bold text-white">Support</h4>
-                <ul className="mt-4 space-y-2.5 text-sm">
-                  <li>
-                    <Link
-                      className="text-slate-300 hover:text-white"
-                      to="/shipping"
-                    >
-                      Shipping Policy
-                    </Link>
-                  </li>
+                <ul className="mt-4 space-y-2.5 text-sm">                  
                   <li>
                     <Link
                       className="text-slate-300 hover:text-white"
@@ -209,10 +201,7 @@ export default function Footer() {
             <Link className="hover:text-white" to="/returns-refunds">
               Returns
             </Link>
-            <span className="text-slate-700">•</span>
-            <Link className="hover:text-white" to="/shipping">
-              Shipping
-            </Link>
+            <span className="text-slate-700">•</span>                   
           </div>
 
           <div className="flex items-center gap-2 text-xs text-slate-300">

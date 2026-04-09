@@ -1,4 +1,3 @@
-import ShippingPolicy from "./pages/ShippingPolicy";
 import ReturnsRefunds from "./pages/ReturnsRefunds";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -47,7 +46,6 @@ const App = () => {
           }
         />
         <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="/shipping" element={<ShippingPolicy />} />
         <Route path="/returns-refunds" element={<ReturnsRefunds />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
