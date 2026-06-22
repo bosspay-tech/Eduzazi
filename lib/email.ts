@@ -82,7 +82,10 @@ export async function sendVerificationEmail(email: string, name: string, token: 
   `;
 
   const apiKey = process.env.BREVO_API_KEY;
-
+  const senderEmail = process.env.SENDER_EMAIL;
+  if (!senderEmail) {
+    throw new Error("SENDER_EMAIL is not set in environment variables");
+  }
   if (!apiKey) {
     throw new Error("BREVO_API_KEY is not set in environment variables");
   }
@@ -96,7 +99,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
     body: JSON.stringify({
       sender: {
         name: brandName,
-        email: "devsingh98011@gmail.com",
+        email: senderEmail,
       },
       to: [{ email, name }],
       subject,

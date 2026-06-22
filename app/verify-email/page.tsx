@@ -12,6 +12,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
+  const emailFromQuery = searchParams.get('email') || '';
   const effectRan = useRef(false);
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'otp-input'>(
@@ -28,6 +29,12 @@ function VerifyEmailContent() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [showResendForm, setShowResendForm] = useState(false);
+
+  useEffect(() => {
+    if (emailFromQuery) {
+      setResendEmail(emailFromQuery);
+    }
+  }, [emailFromQuery]);
 
   useEffect(() => {
     if (!token || effectRan.current) return;
@@ -216,7 +223,9 @@ function VerifyEmailContent() {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">Enter Verification Code</h2>
                 <p className="text-muted-foreground text-sm">
-                  We sent a 6-digit OTP code to your registered email address.
+                  {emailFromQuery
+                    ? `A new 6-digit verification code was sent to ${emailFromQuery}.`
+                    : 'We sent a 6-digit OTP code to your registered email address.'}
                 </p>
               </div>
 

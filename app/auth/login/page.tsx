@@ -27,6 +27,9 @@ export default function LoginPage() {
 
       if (result?.error) {
         toast.error(result.error);
+        if (result.error.includes('verification code has been sent')) {
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        }
       } else if (result?.ok) {
         toast.success('Login successful!');
         router.push('/');
