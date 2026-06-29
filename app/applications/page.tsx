@@ -8,12 +8,14 @@ import Navbar from '@/components/navbar';
 import { Loader, Calendar, CreditCard, ChevronRight, GraduationCap, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiUrl, authHeaders } from '@/lib/api';
+import { startEasebuzzPayment } from '@/lib/payments';
 
 interface Application {
   applicationId: string;
   serviceName: string;
   fullName: string;
   email: string;
+  phone: string;
   feeAmount: number;
   paymentStatus: string;
   applicationStatus: string;
@@ -27,6 +29,7 @@ export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +59,27 @@ export default function ApplicationsPage() {
       toast.error('Unable to fetch your counseling applications');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayFee = async (app: Application) => {
+    setPayingId(app.applicationId);
+    try {
+      await startEasebuzzPayment(
+        {
+          applicationId: app.applicationId,
+          amount: app.feeAmount,
+          productinfo: app.serviceName,
+          fullName: app.fullName,
+          email: app.email,
+          phone: app.phone,
+        },
+        session?.user?.id
+      );
+    } catch (error) {
+      console.error('Easebuzz payment error:', error);
+      toast.error(error instanceof Error ? error.message : 'Could not start payment');
+      setPayingId(null);
     }
   };
 
@@ -238,13 +262,19 @@ export default function ApplicationsPage() {
                             <ChevronRight className="h-3.5 w-3.5" />
                           </Link>
                         ) : (
-                          <Link
-                            href={`/services/pay?applicationId=${app.applicationId}`}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded-xl shadow-sm transition"
+                          <button
+                            type="button"
+                            onClick={() => handlePayFee(app)}
+                            disabled={payingId === app.applicationId}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-60 px-4 py-2 rounded-xl shadow-sm transition cursor-pointer"
                           >
-                            <CreditCard className="h-3.5 w-3.5" />
-                            <span>Pay Fee</span>
-                          </Link>
+                            {payingId === app.applicationId ? (
+                              <Loader className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CreditCard className="h-3.5 w-3.5" />
+                            )}
+                            <span>{payingId === app.applicationId ? 'Opening...' : 'Pay Fee'}</span>
+                          </button>
                         )}
                       </td>
                     </tr>

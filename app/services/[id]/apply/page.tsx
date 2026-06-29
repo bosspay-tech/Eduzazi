@@ -7,6 +7,7 @@ import Navbar from '@/components/navbar';
 import { Loader, Shield, Sparkles, BookOpen, User, Phone, Mail, Calendar, School, HelpCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiUrl, authHeaders } from '@/lib/api';
+import { startEasebuzzPayment } from '@/lib/payments';
 
 interface Service {
   _id: string;
@@ -199,8 +200,18 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
         return;
       }
 
-      toast.success('Profile details saved! Redirecting to secure fee payment...');
-      router.push(`/services/pay?applicationId=${data.application.applicationId}`);
+      toast.success('Profile details saved! Opening secure payment gateway...');
+      await startEasebuzzPayment(
+        {
+          applicationId: data.application.applicationId,
+          amount: service.price,
+          productinfo: service.name,
+          fullName: fullName.trim(),
+          email: email.trim(),
+          phone: `+91${phone}`,
+        },
+        session?.user?.id
+      );
     } catch (error) {
       console.error('Submit application error:', error);
       toast.error('An error occurred during submission. Please try again.');
