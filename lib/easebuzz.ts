@@ -2,8 +2,7 @@ import type { NextRequest } from 'next/server';
 import {
   buildEasebuzzInitiateHash,
   buildEasebuzzReverseHash,
-  initiateEasebuzzLink,
-  mintEasebuzzUpiIntent,
+  submitEasebuzzInitiatePayment,
   verifyEasebuzzReverseHash,
   type EasebuzzConfig,
   type EasebuzzEnv,
@@ -221,40 +220,9 @@ export async function initiateEasebuzzPayment(params: EasebuzzInitiateParams) {
 }
 
 /** Two-step UPI intent mint (initiateLink → submitInitiatePayment) for direct deeplink checkout. */
-export async function mintEducaziUpiPayment(params: Omit<EasebuzzInitiateParams, 'surl' | 'furl'>) {
-  const config = getEasebuzzConfig();
-  const amount = formatAmount(params.amount);
-  const phone = normalizePhone(params.phone);
-
-  if (phone.length !== 10) {
-    throw new Error('A valid 10-digit phone number is required for payment.');
-  }
-
-  const result = await mintEasebuzzUpiIntent({
-    config,
-    txnid: params.txnid,
-    amount,
-    firstname: sanitizeFirstname(params.firstname),
-    email: params.email.trim(),
-    phone,
-    productinfo: String(params.productinfo).slice(0, 100),
-  });
-
-  if (!result.ok || !result.paymentUrl) {
-    throw new Error(result.error ?? 'Easebuzz UPI mint failed');
-  }
-
-  return {
-    paymentUrl: result.paymentUrl,
-    upiIntent: result.upiIntent,
-    txnid: result.txnid ?? params.txnid,
-    amount,
-  };
-}
-
-/** Thin wrapper around bridge initiateLink (no UDF fields). */
-export async function initiateEasebuzzLinkDirect(
-  params: Omit<EasebuzzInitiateParams, 'surl' | 'furl' | 'udf1' | 'udf2' | 'udf3' | 'udf4' | 'udf5' | 'udf6' | 'udf7' | 'udf8' | 'udf9' | 'udf10'>
+export async function mintEducaziUpiPayment(
+  params: Omit<EasebuzzInitiateParams, 'surl' | 'furl'>,
+  redirectUrl?: string
 ) {
   const config = getEasebuzzConfig();
   const amount = formatAmount(params.amount);
@@ -264,19 +232,58 @@ export async function initiateEasebuzzLinkDirect(
     throw new Error('A valid 10-digit phone number is required for payment.');
   }
 
-  const result = await initiateEasebuzzLink({
+  const base = getSiteBaseUrl();
+  const surl = redirectUrl || `${base}/services/pay/success`;
+  const furl = redirectUrl || `${base}/services/pay/failed`;
+
+  const initiated = await initiateEasebuzzPayment({
+    ...params,
+    amount,
+    firstname: sanitizeFirstname(params.firstname),
+    email: params.email.trim(),
+    phone,
+    productinfo: String(params.productinfo).slice(0, 100),
+    surl,
+    furl,
+  });
+
+  const submitted = await submitEasebuzzInitiatePayment({
     config,
+    accessKey: initiated.accessKey,
+  });
+
+  return {
+    paymentUrl: initiated.paymentUrl,
+    upiIntent: submitted.ok ? submitted.upiIntent : undefined,
+    txnid: initiated.txnid,
+    amount,
+  };
+}
+
+/** Thin wrapper around bridge initiateLink with mandatory surl/furl. */
+export async function initiateEasebuzzLinkDirect(
+  params: Omit<EasebuzzInitiateParams, 'udf1' | 'udf2' | 'udf3' | 'udf4' | 'udf5' | 'udf6' | 'udf7' | 'udf8' | 'udf9' | 'udf10'> & {
+    surl: string;
+    furl: string;
+  }
+) {
+  const amount = formatAmount(params.amount);
+  const phone = normalizePhone(params.phone);
+
+  if (phone.length !== 10) {
+    throw new Error('A valid 10-digit phone number is required for payment.');
+  }
+
+  const result = await initiateEasebuzzPayment({
     txnid: params.txnid,
     amount,
     firstname: sanitizeFirstname(params.firstname),
     email: params.email.trim(),
     phone,
     productinfo: String(params.productinfo).slice(0, 100),
+    surl: params.surl,
+    furl: params.furl,
   });
-
-  if (!result.ok || !result.paymentUrl) {
-    throw new Error(result.error ?? 'Easebuzz payment initiation failed');
-  }
 
   return {
     paymentUrl: result.paymentUrl,

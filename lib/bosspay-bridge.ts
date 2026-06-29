@@ -1,12 +1,12 @@
 import {
   createBossPayBridge,
-  createEasebuzzHandlers,
   createWebFetchHandler,
   MemoryTxnStore,
   type BossPayBridge,
   type BridgeHandlers,
   type EasebuzzEnv,
 } from '@dpx/bridge-node';
+import { createEducaziEasebuzzHandlers } from './easebuzz-bridge-handlers';
 
 type BridgeGlobals = typeof globalThis & {
   __educaziBossPayBridge?: BossPayBridge;
@@ -48,7 +48,7 @@ function getBosspayApiBase(): string {
 function getHandlers(): BridgeHandlers {
   const { key, salt, env } = getEasebuzzCredentials();
   return {
-    easebuzz: createEasebuzzHandlers({
+    easebuzz: createEducaziEasebuzzHandlers({
       key,
       salt,
       env,
