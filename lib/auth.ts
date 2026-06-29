@@ -1,6 +1,9 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { apiUrl } from './api';
+import { ensureNextAuthUrl } from './site-url';
+
+ensureNextAuthUrl();
 
 export const authOptions: NextAuthOptions = {
   providers: [
