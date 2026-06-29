@@ -1,17 +1,27 @@
+/**
+ * DollerpayX bridge inside the Next.js app (same pattern as Madhu-Garments).
+ *
+ * DollerpayX / WordPress call either:
+ *   - https://<domain>/bosspay/v1/*
+ *   - https://<domain>/wp-json/bosspay/v1/*
+ */
 import {
   createBossPayBridge,
   createWebFetchHandler,
   MemoryTxnStore,
+  SupabaseTxnStore,
   type BossPayBridge,
-  type BridgeHandlers,
-  type EasebuzzEnv,
+  type HandlerContext,
+  type TxnStore,
 } from '@dpx/bridge-node';
+import { createClient } from '@supabase/supabase-js';
 import { createEducaziEasebuzzHandlers } from './easebuzz-bridge-handlers';
 
+const DEFAULT_API_BASE = 'https://dpxreal.com/backend-api';
+
 type BridgeGlobals = typeof globalThis & {
+  __educaziBridgeHandler?: ReturnType<typeof createWebFetchHandler>;
   __educaziBossPayBridge?: BossPayBridge;
-  __educaziBossPayTxnStore?: MemoryTxnStore;
-  __educaziBossPayFetchHandler?: ReturnType<typeof createWebFetchHandler>;
 };
 
 const g = globalThis as BridgeGlobals;
@@ -20,7 +30,7 @@ function trimEnv(value: string | undefined): string {
   return (value ?? '').trim().replace(/^["']|["']$/g, '');
 }
 
-function getEasebuzzEnv(): EasebuzzEnv {
+function getEasebuzzEnv() {
   return trimEnv(process.env.EASEBUZZ_ENV) === 'test' ? 'test' : 'prod';
 }
 
@@ -30,7 +40,39 @@ function getEasebuzzCredentials() {
   if (!key || !salt) {
     throw new Error('EASEBUZZ_KEY and EASEBUZZ_SALT must be set in environment variables');
   }
-  return { key, salt, env: getEasebuzzEnv() };
+  return { key, salt, env: getEasebuzzEnv() as 'test' | 'prod' };
+}
+
+function buildTxnStore(): TxnStore {
+  const supabaseUrl = trimEnv(process.env.SUPABASE_URL);
+  const serviceRoleKey = trimEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  if (supabaseUrl && serviceRoleKey) {
+    const client = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    return new SupabaseTxnStore({ client });
+  }
+
+  return new MemoryTxnStore();
+}
+
+function buildHandlerContext(): HandlerContext {
+  const { key, salt, env } = getEasebuzzCredentials();
+
+  return {
+    handlers: {
+      easebuzz: createEducaziEasebuzzHandlers({
+        key,
+        salt,
+        env,
+        productinfo: 'Educazi Counseling Fee',
+      }),
+    },
+    txnStore: buildTxnStore(),
+    bosspayApiBase: trimEnv(process.env.BOSSPAY_API_BASE) || DEFAULT_API_BASE,
+    version: '1.0.0',
+  };
 }
 
 function getBridgeSecret(): string {
@@ -41,59 +83,27 @@ function getBridgeSecret(): string {
   return secret;
 }
 
-function getBosspayApiBase(): string {
-  return trimEnv(process.env.BOSSPAY_API_BASE) || 'https://api.dpxreal.com';
-}
-
-function getHandlers(): BridgeHandlers {
-  const { key, salt, env } = getEasebuzzCredentials();
-  return {
-    easebuzz: createEducaziEasebuzzHandlers({
-      key,
-      salt,
-      env,
-      productinfo: 'Educazi Counseling Fee',
-    }),
-  };
-}
-
-function getTxnStore(): MemoryTxnStore {
-  if (!g.__educaziBossPayTxnStore) {
-    g.__educaziBossPayTxnStore = new MemoryTxnStore();
+/** Web Fetch handler for `/bosspay/v1/*` and `/wp-json/bosspay/v1/*`. */
+export function getBridgeFetchHandler() {
+  if (!g.__educaziBridgeHandler) {
+    g.__educaziBridgeHandler = createWebFetchHandler({
+      ctx: buildHandlerContext(),
+      bridgeSecret: getBridgeSecret(),
+    });
   }
-  return g.__educaziBossPayTxnStore;
+  return g.__educaziBridgeHandler;
 }
 
-function getHandlerContext() {
-  return {
-    handlers: getHandlers(),
-    txnStore: getTxnStore(),
-    bosspayApiBase: getBosspayApiBase(),
-    version: '1.0.0',
-  };
-}
-
-/** DollerpayX bridge instance — webhook forwarding + txn store. */
+/** Bridge instance for Easebuzz webhook → DollerpayX callback forwarding. */
 export function getBossPayBridge(): BossPayBridge {
   if (!g.__educaziBossPayBridge) {
     g.__educaziBossPayBridge = createBossPayBridge({
       bridgeSecret: getBridgeSecret(),
-      bosspayApiBase: getBosspayApiBase(),
-      handlers: getHandlers(),
-      txnStore: getTxnStore(),
+      bosspayApiBase: trimEnv(process.env.BOSSPAY_API_BASE) || DEFAULT_API_BASE,
+      handlers: buildHandlerContext().handlers,
+      txnStore: buildTxnStore(),
       version: '1.0.0',
     });
   }
   return g.__educaziBossPayBridge;
-}
-
-/** Web Fetch handler for `/wp-json/bosspay/v1/*` (WordPress-compatible path). */
-export function getBridgeFetchHandler() {
-  if (!g.__educaziBossPayFetchHandler) {
-    g.__educaziBossPayFetchHandler = createWebFetchHandler({
-      ctx: getHandlerContext(),
-      bridgeSecret: getBridgeSecret(),
-    });
-  }
-  return g.__educaziBossPayFetchHandler;
 }

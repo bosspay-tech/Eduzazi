@@ -63,6 +63,11 @@ export function getSiteBaseUrl(request?: NextRequest): string {
     return normalizeBaseUrl(nextAuthUrl);
   }
 
+  const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl && !isLocalhost(siteUrl)) {
+    return normalizeBaseUrl(siteUrl);
+  }
+
   const coolifyBase = getCoolifyBaseUrl();
   if (coolifyBase) {
     return coolifyBase;

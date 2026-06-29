@@ -1,16 +1,23 @@
-import type { CollectRequest, PGHandlers, StatusRequest } from '@dpx/bridge-node';
-import {
-  makeEasebuzzTxnId,
-  mapEasebuzzStatus,
-  retrieveEasebuzzTransaction,
-  submitEasebuzzInitiatePayment,
-  type EasebuzzConfig,
-} from '@dpx/bridge-node';
+import type { CollectRequest, CollectResult, PGHandlers, StatusRequest, StatusResult } from '@dpx/bridge-node';
+import type { EasebuzzConfig } from '@dpx/bridge-node';
 import { getSiteBaseUrl } from './site-url';
-import { initiateEasebuzzPayment } from './easebuzz';
+import {
+  initiateEasebuzzPayment,
+  normalizeEasebuzzStatusResponse,
+  resolveBridgeEasebuzzStatus,
+  retrieveEasebuzzTransactionByTxnId,
+} from './easebuzz';
 
-function paisaToRupeeString(paisa: number): string {
-  return (Math.round(paisa) / 100).toFixed(2);
+function trimEnv(value: string | undefined): string {
+  return (value ?? '').trim().replace(/^["']|["']$/g, '');
+}
+
+function resolveBridgeOrigin(): string {
+  const siteUrl = trimEnv(process.env.SITE_URL) || trimEnv(process.env.NEXT_PUBLIC_SITE_URL);
+  if (siteUrl) {
+    return siteUrl.replace(/\/+$/, '');
+  }
+  return getSiteBaseUrl();
 }
 
 function normalizeBridgePhone(raw: string): string {
@@ -24,84 +31,70 @@ function ensureBridgeEmail(raw: string): string {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? trimmed : 'customer@educazi.in';
 }
 
-function ensureBridgeName(raw?: string): string {
-  const cleaned = (raw ?? '').replace(/[^A-Za-z]/g, '');
-  return cleaned || 'Customer';
-}
-
-function defaultCallbackUrls(redirectUrl?: string) {
-  const base = getSiteBaseUrl();
-  const surl = redirectUrl || `${base}/services/pay/success`;
-  const furl = redirectUrl || `${base}/services/pay/failed`;
-  return { surl, furl };
+function ensureBridgeName(req: CollectRequest): string {
+  const fromPayer = req.payer_first_name?.replace(/[^A-Za-z]/g, '');
+  if (fromPayer) return fromPayer;
+  const fromEmail = req.customer_email?.split('@')[0]?.replace(/[^A-Za-z]/g, '');
+  return fromEmail || 'Customer';
 }
 
 /**
- * Easebuzz handlers for the DollerpayX / WordPress bridge.
- * Includes mandatory surl/furl — required by Easebuzz initiateLink API.
+ * Easebuzz handlers for DollerpayX / WordPress bridge collect.
+ * Mirrors Madhu-Garments: redirect mode with surl/furl on this host.
  */
 export function createEducaziEasebuzzHandlers(config: EasebuzzConfig): PGHandlers {
   const productinfo = config.productinfo ?? 'Educazi Payment';
-  const retrieveParams = new Map<string, { amount: string; email: string; phone: string }>();
 
   return {
-    createCollection: async (req: CollectRequest) => {
-      const txnid = makeEasebuzzTxnId(req.txn_id);
-      const amount = paisaToRupeeString(req.amount);
+    createCollection: async (req: CollectRequest): Promise<CollectResult> => {
+      const txnid = req.txn_id;
+      const amount = req.amount / 100;
       const email = ensureBridgeEmail(req.customer_email);
       const phone = normalizeBridgePhone(req.customer_phone);
-      const firstname = ensureBridgeName(req.payer_first_name);
-      const { surl, furl } = defaultCallbackUrls(req.redirect_url);
+      const firstname = ensureBridgeName(req);
+      const origin = resolveBridgeOrigin();
+      const surl = `${origin}/api/easebuzz/return?outcome=success`;
+      const furl = `${origin}/api/easebuzz/return?outcome=failed`;
 
-      const initiated = await initiateEasebuzzPayment({
+      const result = await initiateEasebuzzPayment({
         txnid,
         amount,
-        productinfo,
+        productinfo: `Order ${txnid}`,
         firstname,
         email,
         phone,
         surl,
         furl,
+        udf1: txnid,
       });
-
-      const submitted = await submitEasebuzzInitiatePayment({
-        config,
-        accessKey: initiated.accessKey,
-      });
-
-      retrieveParams.set(txnid, { amount, email, phone });
 
       return {
-        payment_url: initiated.paymentUrl,
+        payment_url: result.paymentUrl,
         pg_transaction_id: txnid,
-        mode: 's2s' as const,
-        ...(submitted.ok && submitted.upiIntent ? { upi_intent_url: submitted.upiIntent } : {}),
+        mode: 'redirect',
       };
     },
 
-    checkStatus: async (req: StatusRequest) => {
-      const params = retrieveParams.get(req.pg_txn_id);
-      if (!params) {
-        return { status: 'pending' as const, pg_transaction_id: req.pg_txn_id, amount: 0 };
+    checkStatus: async (req: StatusRequest): Promise<StatusResult> => {
+      const result = await retrieveEasebuzzTransactionByTxnId(req.pg_txn_id);
+      const normalized = normalizeEasebuzzStatusResponse(result, req.pg_txn_id);
+
+      if (!normalized.success || !normalized.data.length) {
+        return { status: 'pending', pg_transaction_id: req.pg_txn_id, amount: 0 };
       }
 
-      const result = await retrieveEasebuzzTransaction({
-        config,
-        txnid: req.pg_txn_id,
-        amount: params.amount,
-        email: params.email,
-        phone: params.phone,
-      });
-
-      if (!result.ok) {
-        return { status: 'pending' as const, pg_transaction_id: req.pg_txn_id, amount: 0 };
-      }
+      const row = normalized.data[0] as {
+        status?: string;
+        amount?: unknown;
+        raw?: Record<string, unknown>;
+      };
+      const amountPaisa = Math.max(0, Math.round(Number(row.amount ?? 0) * 100));
 
       return {
-        status: mapEasebuzzStatus(result.statusText ?? ''),
+        status: resolveBridgeEasebuzzStatus(String(row.status ?? '')),
         pg_transaction_id: req.pg_txn_id,
-        amount: result.amountPaisa ?? 0,
-        ...(result.raw ? { raw_pg_response: result.raw as Record<string, unknown> } : {}),
+        amount: amountPaisa,
+        ...(row.raw ? { raw_pg_response: row.raw } : {}),
       };
     },
 
