@@ -7,8 +7,6 @@ import {
   getCallbackBaseUrl,
   initiateEasebuzzPayment,
 } from '@/lib/easebuzz';
-
-type InitiatePaymentBody = {
   applicationId: string;
   amount: number | string;
   productinfo: string;
@@ -57,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const txnid = createTransactionId();
-    const callbackUrl = `${getCallbackBaseUrl()}/api/payments/easebuzz/callback`;
+    const callbackUrl = `${getCallbackBaseUrl(request)}/api/payments/easebuzz/callback`;
     const firstname = String(fullName).trim().split(/\s+/)[0] || 'Applicant';
     const normalizedPhone = String(phone).replace(/\D/g, '').slice(-10);
 

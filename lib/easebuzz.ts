@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import type { NextRequest } from 'next/server';
+import { getSiteBaseUrl } from './site-url';
 
 export type EasebuzzEnv = 'test' | 'prod';
 
@@ -143,9 +145,8 @@ export function createTransactionId(prefix = 'EB'): string {
   return `${prefix}${stamp}${random}`.slice(0, 30);
 }
 
-export function getCallbackBaseUrl(): string {
-  const base = process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000';
-  return base.replace(/\/$/, '');
+export function getCallbackBaseUrl(request?: NextRequest): string {
+  return getSiteBaseUrl(request);
 }
 
 export async function initiateEasebuzzPayment(params: EasebuzzInitiateParams) {

@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import { CounselingApplication } from '@/lib/models';
 import { sendCounselingConfirmationEmail } from '@/lib/email';
 import { getEasebuzzConfig, verifyPaymentResponse, type EasebuzzCallbackParams } from '@/lib/easebuzz';
+import { getSiteBaseUrl } from '@/lib/site-url';
 
 function normalizeCallbackParams(formData: FormData): EasebuzzCallbackParams {
   const params: EasebuzzCallbackParams = {};
@@ -14,7 +15,7 @@ function normalizeCallbackParams(formData: FormData): EasebuzzCallbackParams {
 
 function redirectToResult(request: NextRequest, applicationId: string, status: 'success' | 'failed', reason?: string) {
   const path = status === 'success' ? '/services/pay/success' : '/services/pay/failed';
-  const url = new URL(path, request.nextUrl.origin);
+  const url = new URL(path, `${getSiteBaseUrl(request)}/`);
   url.searchParams.set('applicationId', applicationId);
   if (reason) {
     url.searchParams.set('reason', reason);
