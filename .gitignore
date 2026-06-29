@@ -27,3 +27,6 @@ tsconfig.tsbuildinfo
 
 .env
 key.txt
+
+# Local reference clone — do not commit
+Madhu-Garments/
