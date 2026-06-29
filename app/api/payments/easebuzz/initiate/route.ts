@@ -7,6 +7,8 @@ import {
   getCallbackBaseUrl,
   initiateEasebuzzPayment,
 } from '@/lib/easebuzz';
+
+type InitiatePaymentBody = {
   applicationId: string;
   amount: number | string;
   productinfo: string;
