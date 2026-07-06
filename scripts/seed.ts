@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import connectDB from '../lib/db';
 import { Product } from '../lib/models';
+import { FEE_TIER_SERVICES, toSeedProduct } from './fee-tier-services';
 
 // Clean, portable list of products fetched from the original database.
 // This array contains no database-specific metadata (like id, createdAt, etc.)
@@ -847,7 +848,8 @@ const products = [
         "rating": 4
       }
     ]
-  }
+  },
+  ...FEE_TIER_SERVICES.map(toSeedProduct),
 ];
 
 async function seed() {
