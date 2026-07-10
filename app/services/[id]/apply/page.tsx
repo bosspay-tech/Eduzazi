@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Navbar from '@/components/navbar';
-import { Loader, Shield, Sparkles, BookOpen, User, Phone, Mail, Calendar, School, HelpCircle, FileText } from 'lucide-react';
+import { Loader, Shield, Sparkles, BookOpen, User, Phone, Mail, Calendar, School, HelpCircle, FileText, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiUrl, authHeaders } from '@/lib/api';
 import { startEasebuzzPayment } from '@/lib/payments';
@@ -40,6 +40,38 @@ const QUALIFICATIONS = [
   'Other Professional Certifications',
 ];
 
+const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Delhi',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+];
+
 export default function ApplyPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
@@ -63,6 +95,16 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
   const [preferredCourse, setPreferredCourse] = useState('');
   const [sopOrEssayText, setSopOrEssayText] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+
+  const [deliveryStreet, setDeliveryStreet] = useState('');
+  const [deliveryCity, setDeliveryCity] = useState('');
+  const [deliveryState, setDeliveryState] = useState(INDIAN_STATES[0]);
+  const [deliveryPincode, setDeliveryPincode] = useState('');
+  const [billingSameAsDelivery, setBillingSameAsDelivery] = useState(true);
+  const [billingStreet, setBillingStreet] = useState('');
+  const [billingCity, setBillingCity] = useState('');
+  const [billingState, setBillingState] = useState(INDIAN_STATES[0]);
+  const [billingPincode, setBillingPincode] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -105,6 +147,17 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
             if (lastApp.preferredCountry) setPreferredCountry(lastApp.preferredCountry);
             if (lastApp.preferredCourse) setPreferredCourse(lastApp.preferredCourse);
             if (lastApp.sopOrEssayText) setSopOrEssayText(lastApp.sopOrEssayText);
+            if (lastApp.deliveryStreet) setDeliveryStreet(lastApp.deliveryStreet);
+            if (lastApp.deliveryCity) setDeliveryCity(lastApp.deliveryCity);
+            if (lastApp.deliveryState) setDeliveryState(lastApp.deliveryState);
+            if (lastApp.deliveryPincode) setDeliveryPincode(lastApp.deliveryPincode);
+            if (lastApp.billingSameAsDelivery === false) {
+              setBillingSameAsDelivery(false);
+              if (lastApp.billingStreet) setBillingStreet(lastApp.billingStreet);
+              if (lastApp.billingCity) setBillingCity(lastApp.billingCity);
+              if (lastApp.billingState) setBillingState(lastApp.billingState);
+              if (lastApp.billingPincode) setBillingPincode(lastApp.billingPincode);
+            }
             return;
           }
         }
@@ -169,6 +222,27 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
       return;
     }
 
+    if (!deliveryStreet.trim() || !deliveryCity.trim() || !deliveryState || !deliveryPincode.trim()) {
+      toast.error('Please fill in the complete delivery address.');
+      return;
+    }
+
+    if (!/^\d{6}$/.test(deliveryPincode.trim())) {
+      toast.error('Delivery pincode must be exactly 6 digits.');
+      return;
+    }
+
+    if (!billingSameAsDelivery) {
+      if (!billingStreet.trim() || !billingCity.trim() || !billingState || !billingPincode.trim()) {
+        toast.error('Please fill in the complete billing address.');
+        return;
+      }
+      if (!/^\d{6}$/.test(billingPincode.trim())) {
+        toast.error('Billing pincode must be exactly 6 digits.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -190,6 +264,15 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
           preferredCourse: preferredCourse.trim(),
           sopOrEssayText: sopOrEssayText.trim(),
           additionalNotes: additionalNotes.trim(),
+          deliveryStreet: deliveryStreet.trim(),
+          deliveryCity: deliveryCity.trim(),
+          deliveryState,
+          deliveryPincode: deliveryPincode.trim(),
+          billingSameAsDelivery,
+          billingStreet: billingSameAsDelivery ? undefined : billingStreet.trim(),
+          billingCity: billingSameAsDelivery ? undefined : billingCity.trim(),
+          billingState: billingSameAsDelivery ? undefined : billingState,
+          billingPincode: billingSameAsDelivery ? undefined : billingPincode.trim(),
         }),
       });
 
@@ -485,6 +568,147 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
                   </div>
                 </div>
               )}
+
+              {/* Section: Delivery & Billing Address */}
+              <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                  <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                    <MapPin className="w-5.5 h-5.5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900">Delivery & Billing Address</h3>
+                    <p className="text-xs text-slate-400">Where documents and correspondence should be sent.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Delivery Address *</p>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Street / House No. *</label>
+                    <input
+                      type="text"
+                      value={deliveryStreet}
+                      onChange={(e) => setDeliveryStreet(e.target.value)}
+                      required
+                      placeholder="House no., street, locality"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">City *</label>
+                      <input
+                        type="text"
+                        value={deliveryCity}
+                        onChange={(e) => setDeliveryCity(e.target.value)}
+                        required
+                        placeholder="City"
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">State *</label>
+                      <select
+                        value={deliveryState}
+                        onChange={(e) => setDeliveryState(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition cursor-pointer"
+                      >
+                        {INDIAN_STATES.map((state) => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Pincode *</label>
+                      <input
+                        type="text"
+                        value={deliveryPincode}
+                        onChange={(e) => setDeliveryPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        required
+                        placeholder="6-digit pincode"
+                        maxLength={6}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={billingSameAsDelivery}
+                      onChange={(e) => setBillingSameAsDelivery(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span className="text-sm font-semibold text-gray-800">Billing address same as delivery address</span>
+                  </label>
+
+                  {!billingSameAsDelivery && (
+                    <div className="space-y-4">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Billing Address *</p>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Street / House No. *</label>
+                        <input
+                          type="text"
+                          value={billingStreet}
+                          onChange={(e) => setBillingStreet(e.target.value)}
+                          required={!billingSameAsDelivery}
+                          placeholder="House no., street, locality"
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">City *</label>
+                          <input
+                            type="text"
+                            value={billingCity}
+                            onChange={(e) => setBillingCity(e.target.value)}
+                            required={!billingSameAsDelivery}
+                            placeholder="City"
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">State *</label>
+                          <select
+                            value={billingState}
+                            onChange={(e) => setBillingState(e.target.value)}
+                            required={!billingSameAsDelivery}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition cursor-pointer"
+                          >
+                            {INDIAN_STATES.map((state) => (
+                              <option key={state} value={state}>{state}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Pincode *</label>
+                          <input
+                            type="text"
+                            value={billingPincode}
+                            onChange={(e) => setBillingPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            required={!billingSameAsDelivery}
+                            placeholder="6-digit pincode"
+                            maxLength={6}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm font-semibold transition"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Section 5: Additional Notes */}
               <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">

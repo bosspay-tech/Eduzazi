@@ -27,6 +27,15 @@ export async function POST(request: NextRequest) {
       preferredCourse,
       sopOrEssayText,
       additionalNotes,
+      deliveryStreet,
+      deliveryCity,
+      deliveryState,
+      deliveryPincode,
+      billingSameAsDelivery,
+      billingStreet,
+      billingCity,
+      billingState,
+      billingPincode,
     } = await request.json();
 
     // Required fields validation
@@ -43,6 +52,41 @@ export async function POST(request: NextRequest) {
       !gpaOrPercentage
     ) {
       return NextResponse.json({ error: 'Missing required profile fields' }, { status: 400 });
+    }
+
+    const delivery = {
+      street: String(deliveryStreet || '').trim(),
+      city: String(deliveryCity || '').trim(),
+      state: String(deliveryState || '').trim(),
+      pincode: String(deliveryPincode || '').trim(),
+    };
+
+    if (!delivery.street || !delivery.city || !delivery.state || !delivery.pincode) {
+      return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 });
+    }
+
+    if (!/^\d{6}$/.test(delivery.pincode)) {
+      return NextResponse.json({ error: 'Delivery pincode must be 6 digits' }, { status: 400 });
+    }
+
+    const sameAsDelivery = billingSameAsDelivery !== false;
+
+    const billing = sameAsDelivery
+      ? delivery
+      : {
+          street: String(billingStreet || '').trim(),
+          city: String(billingCity || '').trim(),
+          state: String(billingState || '').trim(),
+          pincode: String(billingPincode || '').trim(),
+        };
+
+    if (!sameAsDelivery) {
+      if (!billing.street || !billing.city || !billing.state || !billing.pincode) {
+        return NextResponse.json({ error: 'Billing address is required when not same as delivery' }, { status: 400 });
+      }
+      if (!/^\d{6}$/.test(billing.pincode)) {
+        return NextResponse.json({ error: 'Billing pincode must be 6 digits' }, { status: 400 });
+      }
     }
 
     // Retrieve service details to get name & fee amount
@@ -71,6 +115,15 @@ export async function POST(request: NextRequest) {
       preferredCourse: preferredCourse || undefined,
       sopOrEssayText: sopOrEssayText || undefined,
       additionalNotes: additionalNotes || undefined,
+      deliveryStreet: delivery.street,
+      deliveryCity: delivery.city,
+      deliveryState: delivery.state,
+      deliveryPincode: delivery.pincode,
+      billingSameAsDelivery: sameAsDelivery,
+      billingStreet: billing.street,
+      billingCity: billing.city,
+      billingState: billing.state,
+      billingPincode: billing.pincode,
       feeAmount: service.price, // fee amount is the service price
       paymentStatus: 'PENDING',
       applicationStatus: 'PENDING',

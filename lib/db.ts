@@ -100,9 +100,28 @@ async function initializeDatabase(pool: Pool) {
       "razorpayOrderId" VARCHAR(255),
       "razorpayPaymentId" VARCHAR(255),
       "razorpaySignature" VARCHAR(255),
+      "deliveryStreet" VARCHAR(500),
+      "deliveryCity" VARCHAR(255),
+      "deliveryState" VARCHAR(255),
+      "deliveryPincode" VARCHAR(10),
+      "billingSameAsDelivery" BOOLEAN DEFAULT TRUE,
+      "billingStreet" VARCHAR(500),
+      "billingCity" VARCHAR(255),
+      "billingState" VARCHAR(255),
+      "billingPincode" VARCHAR(10),
       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );`
+    );`,
+
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "deliveryStreet" VARCHAR(500);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "deliveryCity" VARCHAR(255);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "deliveryState" VARCHAR(255);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "deliveryPincode" VARCHAR(10);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "billingSameAsDelivery" BOOLEAN DEFAULT TRUE;`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "billingStreet" VARCHAR(500);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "billingCity" VARCHAR(255);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "billingState" VARCHAR(255);`,
+    `ALTER TABLE educcazi_counseling_applications ADD COLUMN IF NOT EXISTS "billingPincode" VARCHAR(10);`,
   ];
 
   const client = await pool.connect();
